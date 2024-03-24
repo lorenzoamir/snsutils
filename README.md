@@ -10,7 +10,7 @@ for example by running
 ```{bash}
 echo 'source "/projects/bioinformatics/snsutils/snsutils.sh"' >> ~/.bashrc
 ```
-in case you want to use it in scripts you will probably have to source the file it in the script to.
+in case you want to use it in scripts you will probably have to source the file it in the script too.
 
 ## Documentation
 
