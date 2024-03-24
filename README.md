@@ -84,7 +84,7 @@ List all jobs with "wgcna" in their name (case-insensitive) on all queues
 ```
 findjobs -i wgcna
 ```
-List jobs running on any of the `ancreon` queues
+List jobs running on any of the `anacreon` queues
 ```
 findjobs -q anacreon
 ```
