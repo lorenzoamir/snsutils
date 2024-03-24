@@ -1,10 +1,6 @@
 
 # List pbs log files .e and .o files with 6 digits after them
-<<<<<<< HEAD
 alias lseo="find . -maxdepth 1 -type f -regextype posix-extended -regex '.*\.[eo][0-9]{6}$'"
-=======
-alias lseo="find . -type f -regextype posix-extended -regex '.*\.[eo][0-9]{6}$'"
->>>>>>> 9824b087fcf8e42607eaa12cd351c3a188804325
 
 # Remove pbs log files .e and .o files with 6 digits after them
 alias rmeo="find . -maxdepth 1 -type f -regextype posix-extended -regex '.*\.[eo][0-9]{6}$' -delete"
@@ -23,11 +19,7 @@ alias watchjobs="watch -n 1 qstat -fu $USER"
 alias wj="watch -n 1 qstat -fu $USER"  # Shortcut alias
 
 # Search for 'Killed' messages in files
-<<<<<<< HEAD
 alias anykilled="grep -l 'Killed' ./*"
-=======
-alias anykilled="grep -rl 'Killed' ./*"
->>>>>>> 9824b087fcf8e42607eaa12cd351c3a188804325
 
 # Function to create and submit a PBS job
 fsub() {
