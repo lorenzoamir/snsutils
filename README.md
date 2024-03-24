@@ -1,5 +1,5 @@
 # snsutils
-Aliases and function to make your life easier on the sns cluster
+Functions and aliases to make your life easier on the sns cluster
 
 ## Installation
 To use it in interactive shells just add this line to your `.bashrc`
