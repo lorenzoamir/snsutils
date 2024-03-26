@@ -14,4 +14,4 @@ in case you want to use it in scripts you will probably have to source the file 
 
 ## Documentation
 
-Documentation can be found [on the BioInfoLab wiki](https://wiki.bioinfolab.sns.it/e/en/snsutils).
+Documentation can be found [on the BioInfoLab wiki](https://wiki.bioinfolab.sns.it/en/snsutils).
