@@ -128,7 +128,6 @@ fsub() {
         waitinglist=$(echo "$waitinglist" | tr ' ,;' ':')
         waitinglist=$(echo "$waitinglist" | tr -s ':')
         waitinglist=$(echo "$waitinglist" | sed 's/^:\(.*\)$/\1/')
-        echo "Waiting list: $waitinglist"
     fi
 
     # Submit the job
