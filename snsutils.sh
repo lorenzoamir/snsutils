@@ -1,9 +1,24 @@
-
 # List pbs log files .e and .o files with 6 digits after them
-alias lseo="find . -maxdepth 1 -type f -regextype posix-extended -regex '.*\.[eo][0-9]{6}$'"
+lseo() {
+    local search_dir="."
+    local search_string=".*\.[eo][0-9]{6}$"
+    local delete=""
 
-# Remove pbs log files .e and .o files with 6 digits after them
-alias rmeo="find . -maxdepth 1 -type f -regextype posix-extended -regex '.*\.[eo][0-9]{6}$' -delete"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help) echo "Usage: lseo [-e|-o] [-delete] [search_dir]"; return 0;;
+            -e) search_string=".*\.e[0-9]{6}$"; shift;;
+            -o) search_string=".*\.o[0-9]{6}$"; shift;;
+            -delete) delete="-delete"; shift;;
+            *) search_dir="$1"; shift;;
+        esac
+    done
+
+    find "$search_dir" -maxdepth 1 -type f -regextype posix-extended -regex "$search_string" $delete
+}
+
+# Make rmeo same as lseo -delete
+alias rmeo="lseo -delete"
 
 # Change directory to bioinformatics database directory
 alias cddb="cd /projects/bioinformatics/DB/"
@@ -149,6 +164,14 @@ findjobs() {
     # Parse options
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            -h|--help)
+                echo "Usage: findjobs [-i] [-q] [-d] [search_string]"
+                echo "  -i: case insensitive search"
+                echo "  -q: search in the queue name instead of job name"
+                echo "  -delete: delete the jobs found"
+                echo "  search_string: search string to look for in job names or queue"
+                return 0
+                ;;
             -i)
                 case_insensitive=true
                 shift
@@ -157,7 +180,7 @@ findjobs() {
                 search_queue=true
                 shift
                 ;;
-            --delete)
+            -delete)
                 delete=true
                 shift
                 ;;
@@ -198,15 +221,15 @@ findjobs() {
         return 1
     fi
 
-    # Delete the jobs if --delete option is provided
+    # Delete the jobs if -delete option is provided
     if [ "$delete" = true ]; then
         echo "Deleting jobs with the search string '$search_string':"
+        echo "$job_ids"
         echo "$job_ids" | xargs qdel
     else
         echo "$job_ids"
     fi
 }
-
 
 # Alias for findjobs
 alias fj="findjobs"
