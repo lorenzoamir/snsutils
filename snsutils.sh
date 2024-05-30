@@ -509,7 +509,8 @@ resub () {
                 shift
                 ;;
             -h|--help)
-                echo "Usage: resub [--noask] [--no-remove-eo] [job_id]"
+                echo "Resubmit the last qsub or fsub command in history"
+                echo "Usage: resub [--noask] [--keep]"
                 echo "  --noask: don't ask for confirmation (use with caution)"
                 echo "  --keep: don't remove .e and .o files from current directory"
                 return 0
