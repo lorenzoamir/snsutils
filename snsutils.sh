@@ -492,4 +492,76 @@ mkenv () {
     fi
 }
 
+resub () {
+    local ask="true"
+    local remove_eo="true"
 
+    # parse arguments
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+        case $key in
+            --noask)
+                ask=false
+                shift
+                ;;
+            --keep)
+                remove_eo=false
+                shift
+                ;;
+            -h|--help)
+                echo "Usage: resub [--noask] [--no-remove-eo] [job_id]"
+                echo "  --noask: don't ask for confirmation (use with caution)"
+                echo "  --keep: don't remove .e and .o files from current directory"
+                return 0
+                ;;
+            # Unknown option
+            *)
+                echo "Unknown option: $1"
+                return 1
+                ;;
+        esac
+    done
+
+    # find last run qsub or fsub command and copy it
+    last_command=$(history | grep -E 'qsub|fsub' | tail -n 1 | sed 's/^.\{7\}//')
+    # if no command found, exit with error
+    if [ -z "$last_command" ]; then
+        echo "Error: no qsub or fsub command found in history"
+        return 1
+    else
+        echo "Last command:"
+        echo "$last_command"
+        echo
+    fi
+
+
+    if [ "$ask" == "true" ]; then
+        read -p "Do you want to resubmit? [Y/n] "
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            echo "Exiting"
+            return 0
+        fi
+    fi 
+
+    # Resubmit the job
+    eval "$last_command"
+
+    if [[ "$ask" == "true" && "$remove_eo" == "true" ]]; then
+        read -p "Do you want to remove log files from current directory? [Y/n] "
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            echo "Exiting"
+            return 0
+        fi
+    fi
+
+    if [ "$remove_eo" == "true" ]; then
+        rmeo
+    fi
+} 
+
+   
+   
+   
+
+   
+   
