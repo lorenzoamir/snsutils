@@ -532,9 +532,7 @@ resub () {
     else
         echo "Last command:"
         echo "$last_command"
-        echo
     fi
-
 
     if [ "$ask" == "true" ]; then
         read -p "Do you want to resubmit? [Y/n] "
@@ -547,22 +545,39 @@ resub () {
     # Resubmit the job
     eval "$last_command"
 
-    if [[ "$ask" == "true" && "$remove_eo" == "true" ]]; then
-        read -p "Do you want to remove log files from current directory? [Y/n] "
-        if [[ $REPLY =~ ^[Nn]$ ]]; then
-            echo "Exiting"
-            return 0
+    # Remove log files from current directory
+    if [ "$remove_eo" == "true" ]; then
+        if [[ "$ask" == "true" ]]; then
+            # Ask, but default to yes
+            read -p "Do you want to remove log files from current directory? [Y/n] "
+            if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                rmeo
+            fi
+        else
+            echo "Removing log files from current directory"
+            rmeo
         fi
     fi
 
+    # If current directory contains a subdirectory containing only log files, empty it
     if [ "$remove_eo" == "true" ]; then
-        rmeo
+        for dir in $(find . -mindepth 1 -maxdepth 1 -type d); do
+            # use lseo to get list of log files in the directory and compare with the list of all files
+            # if the lists are the same, run rmeo in the directory
+            if [ "$(lseo $dir)" == "$(find $dir -maxdepth 1 -type f)" ]; then
+                echo "Found directory containing only log files: $dir"
+                if [ "$ask" == "true" ]; then
+                    # Ask, but default to yes
+                    read -p "Do you want to empty the directory? [Y/n] "
+                    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                        rmeo $dir
+                    fi
+                else
+                    echo "Emptying directory: $dir" 
+                    rmeo $dir
+                fi
+            fi
+        done
     fi
-} 
 
-   
-   
-   
-
-   
-   
+}
