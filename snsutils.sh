@@ -303,7 +303,7 @@ mkenv () {
 
     # set default values if not provided by user
     type=${type:-'python'}
-    version=${version:-'3.10'}
+    version=${version:-'3.12'}
     jupyter=${jupyter:-'true'}
     pip_packages=${pip_packages:-'numpy pandas scipy matplotlib'}
     conda_packages=${conda_packages:-''}
@@ -551,6 +551,7 @@ resub () {
             # Ask, but default to yes
             read -p "Do you want to remove log files from current directory? [Y/n] "
             if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                echo "Removing log files from current directory"
                 rmeo
             fi
         else
@@ -561,23 +562,94 @@ resub () {
 
     # If current directory contains a subdirectory containing only log files, empty it
     if [ "$remove_eo" == "true" ]; then
-        for dir in $(find . -mindepth 1 -maxdepth 1 -type d); do
+        # loop over directories in current directory, skip hidden directories
+        for dir in $(find . -mindepth 1 -maxdepth 1 -type d | grep -v '^\./\..*'); do
             # use lseo to get list of log files in the directory and compare with the list of all files
             # if the lists are the same, run rmeo in the directory
-            if [ "$(lseo $dir)" == "$(find $dir -maxdepth 1 -type f)" ]; then
-                echo "Found directory containing only log files: $dir"
-                if [ "$ask" == "true" ]; then
-                    # Ask, but default to yes
-                    read -p "Do you want to empty the directory? [Y/n] "
-                    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+            if [ "$(lseo $dir)" == "$(find $dir -maxdepth 1 -type f | grep -v '^\./\..*')" ]; then
+                # Check if the directory actually contains any files
+                if [ ! -z "$(find $dir -maxdepth 1 -type f)" ]; then
+                    echo "Found directory containing only log files: $dir"
+                    if [ "$ask" == "true" ]; then
+                        # Ask, but default to yes
+                        read -p "Do you want to empty the directory? [Y/n] "
+                        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                            echo "Emptying directory: $dir"
+                            rmeo $dir
+                        fi
+                    else
+                        echo "Emptying directory: $dir" 
                         rmeo $dir
                     fi
-                else
-                    echo "Emptying directory: $dir" 
-                    rmeo $dir
                 fi
             fi
         done
     fi
+}
+
+# Logtail function to view last lines of log files,
+# the simplest case would be lseo -o | xargs -I {} sh -c 'echo -n "{}: "; tail -n 1 {}'
+# but make parameters: directory to run lseo on, wheter to run lseo -e or lseo -o, number of lines to tail,
+# string to run inverse grep on
+
+logtail() {
+    local search_dir="."
+    local file_type="eo"
+    local num_lines=1
+    local inverse_grep=""
+
+    # Parse options
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -d|--dir)
+                search_dir="$2"
+                shift 2
+                ;;
+            -e)
+                file_type="e"
+                shift
+                ;;
+            -o)
+                file_type="o"
+                shift
+                ;;
+            -n|--num)
+                num_lines="$2"
+                shift 2
+                ;;
+            -v|--inverse-grep)
+                inverse_grep="$2"
+                shift 2
+                ;;
+            -h|--help)
+                echo "Usage: logtail [-d search_dir] [-e|-o] [-n num_lines] [-v inverse_grep]"
+                echo "  -d, --dir: directory to run lseo on"
+                echo "  -e: search for .e files only"
+                echo "  -o: search for .o files only"
+                echo "  -n, --num: number of lines to tail"
+                echo "  -v, --inverse-grep: only display files that do not contain the provided string" 
+                return 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                return 1
+                ;;
+        esac
+    done
+
+    # If -e or -o set set lseo option
+    local lseo_option=""
+    if [ "$file_type" == "e" ]; then
+        lseo_option="-e"
+    elif [ "$file_type" == "o" ]; then
+        lseo_option="-o"
+    fi
+    
+    if [ -n "$inverse_grep" ]; then
+        lseo $lseo_option $search_dir | xargs -I {} sh -c 'echo "{}:"; tail -n '"$num_lines"' "{}" | grep -v '"$inverse_grep"
+    else
+        lseo $lseo_option $search_dir | xargs -I {} sh -c 'echo "{}:"; tail -n '"$num_lines"' "{}"'
+    fi
+
 
 }
