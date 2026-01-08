@@ -561,30 +561,58 @@ resub () {
     fi
 
     # If current directory contains a subdirectory containing only log files, empty it
+    #if [ "$remove_eo" == "true" ]; then
+    #    # loop over directories in current directory, skip hidden directories
+    #    for dir in $(find . -mindepth 1 -maxdepth 1 -type d | grep -v '^\./\..*'); do
+    #        # use lseo to get list of log files in the directory and compare with the list of all files
+    #        # if the lists are the same, run rmeo in the directory
+    #        if [ "$(lseo $dir)" == "$(find $dir -maxdepth 1 -type f | grep -v '^\./\..*')" ]; then
+    #            # Check if the directory actually contains any files
+    #            if [ ! -z "$(find $dir -maxdepth 1 -type f)" ]; then
+    #                echo "Found directory containing only log files: $dir"
+    #                if [ "$ask" == "true" ]; then
+    #                    # Ask, but default to yes
+    #                    read -p "Do you want to empty the directory? [Y/n] "
+    #                    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    #                        echo "Emptying directory: $dir"
+    #                        rmeo $dir
+    #                    fi
+    #                else
+    #                    echo "Emptying directory: $dir" 
+    #                    rmeo $dir
+    #                fi
+    #            fi
+    #        fi
+    #    done
+    #fi
+
+    # If current directory contains a subdirectory containing only log files (ignoring hidden files), empty it
     if [ "$remove_eo" == "true" ]; then
-        # loop over directories in current directory, skip hidden directories
-        for dir in $(find . -mindepth 1 -maxdepth 1 -type d | grep -v '^\./\..*'); do
-            # use lseo to get list of log files in the directory and compare with the list of all files
-            # if the lists are the same, run rmeo in the directory
-            if [ "$(lseo $dir)" == "$(find $dir -maxdepth 1 -type f | grep -v '^\./\..*')" ]; then
-                # Check if the directory actually contains any files
-                if [ ! -z "$(find $dir -maxdepth 1 -type f)" ]; then
-                    echo "Found directory containing only log files: $dir"
-                    if [ "$ask" == "true" ]; then
-                        # Ask, but default to yes
-                        read -p "Do you want to empty the directory? [Y/n] "
-                        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-                            echo "Emptying directory: $dir"
-                            rmeo $dir
-                        fi
-                    else
-                        echo "Emptying directory: $dir" 
-                        rmeo $dir
+    
+        # loop over non-hidden directories in current directory
+        while IFS= read -r -d '' dir; do
+    
+            non_hidden_files=$(find "$dir" -maxdepth 1 -type f ! -name '.*' | sort)
+            non_hidden_logs=$(lseo "$dir" | grep -v '/\.[^/]*$' | sort)
+    
+            if [ "$non_hidden_files" = "$non_hidden_logs" ] && [ -n "$non_hidden_files" ]; then
+                echo "Found directory containing only log files: $dir"
+    
+                if [ "$ask" == "true" ]; then
+                    #read -p "Do you want to empty the directory? [Y/n] "
+                    read -p "Do you want to empty the directory? [Y/n] " < /dev/tty
+                    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                        echo "Emptying directory: $dir"
+                        rmeo "$dir"
                     fi
+                else
+                    echo "Emptying directory: $dir"
+                    rmeo "$dir"
                 fi
             fi
-        done
+        done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0)
     fi
+
 }
 
 # Logtail function to view last lines of log files,
