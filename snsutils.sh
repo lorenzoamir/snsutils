@@ -17,8 +17,59 @@ lseo() {
     find "$search_dir" -maxdepth 1 -type f -regextype posix-extended -regex "$search_string" $delete
 }
 
+# Remove pbs log files
+rmeo() {
+    local target_dir="."
+    local ask="true"
+
+    for arg in "$@"; do
+        case "$arg" in
+            -h|--help)
+                echo "Usage: rmeo [directory] [-h|--help]"
+                echo "Remove PBS log files (.eNNNNNN, .oNNNNNN) in current directory or specified directory."
+                echo "Also optionally removes subdirectories containing only log files."
+                return 0
+                ;;
+        esac
+    done
+
+    # If a directory is provided as argument, just delete logs there
+    if [[ $# -ge 1 ]] && [[ ! "$1" =~ ^- ]]; then
+        target_dir="$1"
+        lseo -delete "$target_dir"
+        return
+    fi
+
+    # If no dir is provided, delete logs in current directory and look for logs dir
+    lseo -delete "$target_dir"
+
+    # Scan subdirectories containing only log files
+    while IFS= read -r -d '' subdir; do
+        # Get all non-hidden files in the directory
+        non_hidden_files=$(find "$subdir" -maxdepth 1 -type f ! -name '.*' | sort)
+        # Get all log files in the directory
+        non_hidden_logs=$(lseo "$subdir" | sort)
+
+        # If all files are logs and there is at least one file
+        if [[ -n "$non_hidden_files" ]] && [[ "$non_hidden_files" == "$non_hidden_logs" ]]; then
+            echo "Found directory containing only log files: $subdir"
+
+            if [[ "$ask" == "true" ]]; then
+                read -p "Do you want to empty the directory? [Y/n] " < /dev/tty
+                if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                    echo "Emptying directory: $subdir"
+                    lseo -delete "$subdir"
+                fi
+            else
+                echo "Emptying directory: $subdir"
+                lseo -delete "$subdir"
+            fi
+        fi
+    done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0)
+}
+
 # Make rmeo same as lseo -delete
-alias rmeo="lseo -delete"
+#alias rmeo="lseo -delete"
 
 # Change directory to bioinformatics database directory
 alias cddb="cd /projects/bioinformatics/DB/"
