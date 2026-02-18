@@ -356,7 +356,7 @@ mkenv () {
     type=${type:-'python'}
     version=${version:-'3.12'}
     jupyter=${jupyter:-'true'}
-    pip_packages=${pip_packages:-'numpy pandas scipy matplotlib'}
+    pip_packages=${pip_packages:-'uv numpy pandas scipy matplotlib'}
     conda_packages=${conda_packages:-''}
     ask=${ask:-'true'}
 
